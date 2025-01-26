@@ -1,3 +1,3 @@
 #!/bin/bash
 
-archinstall --conf default.conf
+archinstall --conf default.json
