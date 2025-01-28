@@ -20,5 +20,5 @@ jobs:
       - name: Upload ISO
         uses: actions/upload-artifact@v4
         with:
-          name: custom_arch.iso
+          name: custom_arch
           path: out/*.iso
