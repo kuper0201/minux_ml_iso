@@ -6,7 +6,7 @@
     "config_version": "3.0.2",
     "disk_config": null,
     "disk_encryption": null,
-    "hostname": "archlinux",
+    "hostname": "minux",
     "kernels": [
         "linux"
     ],
