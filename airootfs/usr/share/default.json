@@ -8,7 +8,7 @@
     "disk_encryption": null,
     "hostname": "minux",
     "kernels": [
-        "linux"
+        "linux-zen"
     ],
     "locale_config": {
         "kb_layout": "us",
@@ -41,7 +41,7 @@
         "git",
         "nano"
     ],
-    "parallel downloads": 0,
+    "parallel downloads": 5,
     "profile_config": null,
     "save_config": null,
     "swap": true,
