@@ -1,5 +1,5 @@
-Welcome to \e[38;2;30;150;30mM\e[38;2;60;180;60mI\e[38;2;90;210;90mN\e[38;2;120;240;120mU\e[38;2;150;255;150mX\e[0m
-\e[38;2;30;150;30mM\e[38;2;60;180;60mI\e[38;2;90;210;90mN\e[38;2;120;240;120mU\e[38;2;150;255;150mX\e[0m is a minimalist Arch Linux-based distribution.
+Welcome to \033[32mMINUX\033
+\033[32mMINUX\033 is a minimalist Arch Linux-based distribution.
 
 For Network, run nmtui.
 Run setup-minux
