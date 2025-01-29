@@ -49,8 +49,8 @@
     "uki": false,
     "version": "3.0.2",
     "custom-commands": [
-        "git clone https://github.com/kuper0201/custom_arch_scripts /root/custom_arch_scripts",
-        "cd /root/custom_arch_scripts && ./setup.sh",
-        "rm -rf /root/custom_arch_scripts"
+        "git clone https://github.com/kuper0201/minux_scripts /root/minux_scripts",
+        "cd /root/minux_scripts && ./setup.sh",
+        "rm -rf /root/minux_scripts"
     ]
 }
