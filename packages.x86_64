@@ -50,11 +50,11 @@ ldns
 lftp
 #libfido2
 libusb-compat
-linux
+linux-lts
 #linux-atm
 linux-firmware
 linux-firmware-marvell
-linux-headers
+linux-lts-headers
 #livecd-sounds
 lsscsi
 lvm2
