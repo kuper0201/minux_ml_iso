@@ -8,7 +8,7 @@
     "disk_encryption": null,
     "hostname": "minux",
     "kernels": [
-        "linux-zen"
+        "linux-lts"
     ],
     "locale_config": {
         "kb_layout": "us",
