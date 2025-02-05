@@ -12,4 +12,6 @@ polybar
 rofi
 dunst
 broadcom-wl-dkms
+lightdm
+fcitx5
 ```
