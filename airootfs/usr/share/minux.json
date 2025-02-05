@@ -46,6 +46,7 @@
     "uki": false,
     "version": "3.0.2",
     "custom-commands": [
+        "pacman -Syu --noconfirm git",
         "git clone https://github.com/kuper0201/minux_scripts /root/minux_scripts",
         "cd /root/minux_scripts && ./setup.sh",
         "rm -rf /root/minux_scripts"
