@@ -5,10 +5,11 @@
 
 # Packages
 ```text
-linux-zen
+linux-lts
 yay
 i3wm
 polybar
 rofi
 dunst
+broadcom-wl-dkms
 ```
