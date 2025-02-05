@@ -37,10 +37,7 @@
         "type": "iso"
     },
     "ntp": true,
-    "packages": [
-        "git",
-        "nano"
-    ],
+    "packages": [],
     "parallel downloads": 5,
     "profile_config": null,
     "save_config": null,
