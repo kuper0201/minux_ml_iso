@@ -2,16 +2,15 @@
 
 > MINUX is a minimalist Arch Linux-based distribution.<br/>
 > In fact, it is a customized ISO for my personal environment.
+> This is the arch based linux for ML environment.
 
 # Packages
 ```text
 linux-lts
 yay
-i3wm
-polybar
-rofi
-dunst
-broadcom-wl-dkms
+enlightenment
+nvidia-dkms
 lightdm
-fcitx5
+miniconda3
+docker
 ```
