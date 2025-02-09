@@ -15,6 +15,13 @@ if ping -c $PING_COUNT $HOST > /dev/null 2>&1; then
     arch-chroot /mnt/archinstall git clone https://github.com/kuper0201/minux_scripts /root/minux_scripts
     arch-chroot /mnt/archinstall bash -c "cd /root/minux_scripts && ./setup.sh"
     arch-chroot /mnt/archinstall rm -rf /root/minux_scripts
+
+    read -rp "Do you want enter chroot for manual setting? [y/N]: " answer
+    answer=${answer,,}
+
+    if [[ "$answer" == "y" ]]; then
+        Arch-chroot /mnt/archinstall bash
+    fi
 else
     echo -e "MINUX installer requires an active network connection.\nPlease check your network and try again."
 fi
