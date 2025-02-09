@@ -6,7 +6,15 @@ HOST="8.8.8.8"
 PING_COUNT=2
 
 if ping -c $PING_COUNT $HOST > /dev/null 2>&1; then
-    archinstall --conf /usr/share/minux.json
+    interactive-installation --conf /usr/share/minux.json
+    if [ $? -ne 0 ]; then
+        exit $?
+    fi
+
+    arch-chroot /mnt/archinstall pacman -Syu --noconfirm git
+    arch-chroot /mnt/archinstall git clone https://github.com/kuper0201/minux_scripts /root/minux_scripts
+    arch-chroot /mnt/archinstall bash -c "cd /root/minux_scripts && ./setup.sh"
+    arch-chroot /mnt/archinstall rm -rf /root/minux_scripts
 else
     echo -e "MINUX installer requires an active network connection.\nPlease check your network and try again."
 fi
