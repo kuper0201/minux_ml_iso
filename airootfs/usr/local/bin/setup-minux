@@ -12,7 +12,7 @@ if ping -c $PING_COUNT $HOST > /dev/null 2>&1; then
     fi
 
     arch-chroot /mnt/archinstall pacman -Syu --noconfirm git
-    arch-chroot /mnt/archinstall git clone https://github.com/kuper0201/minux_scripts /root/minux_scripts
+    arch-chroot /mnt/archinstall git clone https://github.com/kuper0201/minux_ml_scripts /root/minux_scripts
     arch-chroot /mnt/archinstall bash -c "cd /root/minux_scripts && ./setup.sh"
     arch-chroot /mnt/archinstall rm -rf /root/minux_scripts
 
@@ -20,7 +20,7 @@ if ping -c $PING_COUNT $HOST > /dev/null 2>&1; then
     answer=${answer,,}
 
     if [[ "$answer" == "y" ]]; then
-        Arch-chroot /mnt/archinstall bash
+        arch-chroot /mnt/archinstall bash
     fi
 else
     echo -e "MINUX installer requires an active network connection.\nPlease check your network and try again."
