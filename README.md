@@ -8,9 +8,9 @@
 ```text
 linux-lts
 yay
-enlightenment
+openbox
 nvidia-dkms
 lightdm
-miniconda3
+micrimamba
 docker
 ```
