@@ -14,38 +14,33 @@ if ping -c "$PING_COUNT" "$HOST" > /dev/null 2>&1; then
         exit 1
     }
 
-    echo "Trying to find installed root partition from archinstall log..."
+    echo "Detecting installed root partition..."
 
-    # 1. 로그에서 루트 파티션 찾기
-    INSTALL_LOG="/tmp/archinstall.log"
-    ROOT_PART=""
+    CONFIG_PATH="/var/log/archinstall/user_configuration.json"
 
-    if [[ -f "$INSTALL_LOG" ]]; then
-        ROOT_PART=$(grep -Po '/dev/\w+\d+' "$INSTALL_LOG" | head -n 1)
-    fi
-
-    if [[ -z "$ROOT_PART" ]]; then
-        echo "Failed to detect root partition. Please mount manually."
+    if ! [[ -f "$CONFIG_PATH" ]]; then
+        echo "$CONFIG_PATH not found."
         exit 1
     fi
 
+    # Extract root disk and find root partition (assuming 2nd partition = /)
+    ROOT_DISK=$(jq -r '.disk_config.device_modifications[0].device' "$CONFIG_PATH")
+    ROOT_PART="$ROOT_DISK"2
+
     echo "Detected root partition: $ROOT_PART"
 
-    # 2. 루트 파티션 마운트
+    # Mount root partition
     mount "$ROOT_PART" /mnt
 
-    # 3. 필요한 시스템 디렉토리 마운트
+    # Mount essential filesystems
     mount --bind /dev /mnt/dev
     mount --bind /proc /mnt/proc
     mount --bind /sys /mnt/sys
 
-    # (옵션) EFI 파티션도 필요한 경우 마운트
-    if grep -q '/boot/efi' "$INSTALL_LOG"; then
-        EFI_PART=$(grep -Po '/dev/\w+\d+' "$INSTALL_LOG" | sed -n '2p')
-        mkdir -p /mnt/boot/efi
-        mount "$EFI_PART" /mnt/boot/efi
-        echo "Mounted EFI partition: $EFI_PART"
-    fi
+    # Mount /boot if defined
+    BOOT_PART="$ROOT_DISK"1
+    mkdir -p /mnt/boot
+    mount "$BOOT_PART" /mnt/boot
 
     echo "Running setup script inside chroot..."
     SCRIPT_DIR="/root/minux_scripts"
@@ -64,10 +59,10 @@ if ping -c "$PING_COUNT" "$HOST" > /dev/null 2>&1; then
     if [[ "$answer" == "y" || "$answer" == "yes" ]]; then
         arch-chroot /mnt bash
     else
-        echo "Installation complete. Unmounting and exiting."
-
+        echo "Installation complete. Unmounting..."
         umount -R /mnt
     fi
+
 else
     echo -e "\nMINUX installer requires an active network connection."
     echo "Please check your connection and try again."
