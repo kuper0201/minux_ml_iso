@@ -6,7 +6,7 @@ HOST="8.8.8.8"
 PING_COUNT=2
 
 if ping -c $PING_COUNT $HOST > /dev/null 2>&1; then
-    interactive-installation --conf /usr/share/minux.json
+    interactive-installation --config /usr/share/minux.json
     if [ $? -ne 0 ]; then
         exit $?
     fi
