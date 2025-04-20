@@ -2,45 +2,82 @@
 set -e
 
 echo "Checking network..."
-
 HOST="8.8.8.8"
 PING_COUNT=2
 
 if ping -c "$PING_COUNT" "$HOST" > /dev/null 2>&1; then
     echo "Network OK. Starting MINUX installation..."
-
     archinstall --config /usr/share/minux.json || {
         echo "archinstall failed. Exiting..."
         exit 1
     }
 
-    echo "Detecting installed root partition..."
+    echo "Detecting installation device and partitions..."
 
     CONFIG_PATH="/var/log/archinstall/user_configuration.json"
-
     if ! [[ -f "$CONFIG_PATH" ]]; then
         echo "$CONFIG_PATH not found."
         exit 1
     fi
 
-    # Extract root disk and find root partition (assuming 2nd partition = /)
-    ROOT_DISK=$(jq -r '.disk_config.device_modifications[0].device' "$CONFIG_PATH")
-    ROOT_PART="$ROOT_DISK"2
+    # 디스크 정보 추출
+    INSTALL_DISK=$(jq -r '.disk_config.device_modifications[0].device' "$CONFIG_PATH")
+    PARTITIONS=$(jq -c '.disk_config.device_modifications[0].partitions[]' "$CONFIG_PATH")
 
-    echo "Detected root partition: $ROOT_PART"
+    # 파티션 접두어 결정 (SATA vs NVMe)
+    if [[ "$INSTALL_DISK" =~ nvme ]]; then
+        PFX="p"
+    else
+        PFX=""
+    fi
 
-    # Mount root partition
+    # 마운트 대상 초기화
+    ROOT_PART=""
+    BOOT_PART=""
+    EFI_PART=""
+
+    IDX=1
+    while IFS= read -r part; do
+        MOUNTPOINT=$(echo "$part" | jq -r '.mountpoint')
+        case "$MOUNTPOINT" in
+            "/")
+                ROOT_PART="${INSTALL_DISK}${PFX}${IDX}"
+                ;;
+            "/boot")
+                BOOT_PART="${INSTALL_DISK}${PFX}${IDX}"
+                ;;
+            "/boot/efi")
+                EFI_PART="${INSTALL_DISK}${PFX}${IDX}"
+                ;;
+        esac
+        ((IDX++))
+    done <<< "$PARTITIONS"
+
+    if [[ -z "$ROOT_PART" ]]; then
+        echo "Root partition not found in config."
+        exit 1
+    fi
+
+    echo "Root: $ROOT_PART"
+    echo "Boot: ${BOOT_PART:-(none)}"
+    echo "EFI : ${EFI_PART:-(none)}"
+
+    # 마운트 작업 시작
     mount "$ROOT_PART" /mnt
+    mkdir -p /mnt/{boot,boot/efi}
 
-    # Mount essential filesystems
+    if [[ -n "$BOOT_PART" ]]; then
+        mount "$BOOT_PART" /mnt/boot
+    fi
+
+    if [[ -n "$EFI_PART" ]]; then
+        mount "$EFI_PART" /mnt/boot/efi
+    fi
+
+    # 필수 시스템 디렉토리 마운트
     mount --bind /dev /mnt/dev
     mount --bind /proc /mnt/proc
     mount --bind /sys /mnt/sys
-
-    # Mount /boot if defined
-    BOOT_PART="$ROOT_DISK"1
-    mkdir -p /mnt/boot
-    mount "$BOOT_PART" /mnt/boot
 
     echo "Running setup script inside chroot..."
     SCRIPT_DIR="/root/minux_scripts"
@@ -59,12 +96,13 @@ if ping -c "$PING_COUNT" "$HOST" > /dev/null 2>&1; then
     if [[ "$answer" == "y" || "$answer" == "yes" ]]; then
         arch-chroot /mnt bash
     else
-        echo "Installation complete. Unmounting..."
+        echo "Unmounting system..."
         umount -R /mnt
+        echo "All done!"
     fi
 
 else
     echo -e "\nMINUX installer requires an active network connection."
-    echo "Please check your connection and try again."
+    echo "🔌 Please check your connection and try again."
     exit 1
 fi
