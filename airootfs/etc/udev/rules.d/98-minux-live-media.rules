@@ -1,0 +1,3 @@
+# Archiso mounts its ISO9660 live medium itself. It has no discoverable
+# GPT root partition for systemd-loop to attach from the optical drive.
+SUBSYSTEM=="block", ENV{ID_CDROM}=="1", ENV{ID_FS_TYPE}=="iso9660", ENV{ID_FS_LABEL}=="ARCH_*", ENV{ID_PART_GPT_AUTO_ROOT_DISK_NEEDS_LOOP}="0"

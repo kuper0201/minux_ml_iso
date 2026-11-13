@@ -1,0 +1,8 @@
+# Live networking is owned by NetworkManager, including on first boot.
+disable systemd-networkd*
+disable iwd.service
+enable NetworkManager.service
+enable systemd-resolved.service
+# The LTS kernel uses the existing coredump socket; the new manager's
+# kernel requirements are not met, so do not enable it on the live image.
+disable systemd-coredumpd.service
