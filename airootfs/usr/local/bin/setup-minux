@@ -1,108 +1,52 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -Eeuo pipefail
 
-echo "Checking network..."
-HOST="8.8.8.8"
-PING_COUNT=2
-
-if ping -c "$PING_COUNT" "$HOST" > /dev/null 2>&1; then
-    echo "Network OK. Starting MINUX installation..."
-    archinstall --config /usr/share/minux.json || {
-        echo "archinstall failed. Exiting..."
-        exit 1
-    }
-
-    echo "Detecting installation device and partitions..."
-
-    CONFIG_PATH="/var/log/archinstall/user_configuration.json"
-    if ! [[ -f "$CONFIG_PATH" ]]; then
-        echo "$CONFIG_PATH not found."
-        exit 1
-    fi
-
-    # 디스크 정보 추출
-    INSTALL_DISK=$(jq -r '.disk_config.device_modifications[0].device' "$CONFIG_PATH")
-    PARTITIONS=$(jq -c '.disk_config.device_modifications[0].partitions[]' "$CONFIG_PATH")
-
-    # 파티션 접두어 결정 (SATA vs NVMe)
-    if [[ "$INSTALL_DISK" =~ nvme ]]; then
-        PFX="p"
-    else
-        PFX=""
-    fi
-
-    # 마운트 대상 초기화
-    ROOT_PART=""
-    BOOT_PART=""
-    EFI_PART=""
-
-    IDX=1
-    while IFS= read -r part; do
-        MOUNTPOINT=$(echo "$part" | jq -r '.mountpoint')
-        case "$MOUNTPOINT" in
-            "/")
-                ROOT_PART="${INSTALL_DISK}${PFX}${IDX}"
-                ;;
-            "/boot")
-                BOOT_PART="${INSTALL_DISK}${PFX}${IDX}"
-                ;;
-            "/boot/efi")
-                EFI_PART="${INSTALL_DISK}${PFX}${IDX}"
-                ;;
-        esac
-        ((IDX++))
-    done <<< "$PARTITIONS"
-
-    if [[ -z "$ROOT_PART" ]]; then
-        echo "Root partition not found in config."
-        exit 1
-    fi
-
-    echo "Root: $ROOT_PART"
-    echo "Boot: ${BOOT_PART:-(none)}"
-    echo "EFI : ${EFI_PART:-(none)}"
-
-    # 마운트 작업 시작
-    mount "$ROOT_PART" /mnt
-    mkdir -p /mnt/{boot,boot/efi}
-
-    if [[ -n "$BOOT_PART" ]]; then
-        mount "$BOOT_PART" /mnt/boot
-    fi
-
-    if [[ -n "$EFI_PART" ]]; then
-        mount "$EFI_PART" /mnt/boot/efi
-    fi
-
-    # 필수 시스템 디렉토리 마운트
-    mount --bind /dev /mnt/dev
-    mount --bind /proc /mnt/proc
-    mount --bind /sys /mnt/sys
-
-    echo "Running setup script inside chroot..."
-    SCRIPT_DIR="/root/minux_scripts"
-
-    arch-chroot /mnt bash -c "
-        pacman -Syu --noconfirm git &&
-        git clone https://github.com/kuper0201/minux_ml_scripts $SCRIPT_DIR &&
-        cd $SCRIPT_DIR &&
-        ./setup.sh &&
-        rm -rf $SCRIPT_DIR
-    "
-
-    read -rp $'\nDo you want to enter chroot for manual setting? [y/N]: ' answer
-    answer=${answer,,}
-
-    if [[ "$answer" == "y" || "$answer" == "yes" ]]; then
-        arch-chroot /mnt bash
-    else
-        echo "Unmounting system..."
-        umount -R /mnt
-        echo "All done!"
-    fi
-
-else
-    echo -e "\nMINUX installer requires an active network connection."
-    echo "🔌 Please check your connection and try again."
+if (( EUID != 0 )); then
+    echo "Run setup-minux as root." >&2
     exit 1
 fi
+config_path=/usr/share/minux.json
+archinstall_args=()
+while (( $# )); do
+    case "$1" in
+        --config)
+            [[ $# -ge 2 ]] || { echo "--config requires a file" >&2; exit 2; }
+            config_path=$2
+            shift 2
+            ;;
+        --config=*) config_path=${1#*=}; shift ;;
+        *) archinstall_args+=("$1"); shift ;;
+    esac
+done
+for tool in archinstall jq; do
+    command -v "$tool" >/dev/null || { echo "Missing required command: $tool" >&2; exit 1; }
+done
+[[ -r "$config_path" ]] || { echo "Cannot read configuration: $config_path" >&2; exit 1; }
+
+# Run customization while archinstall still owns the mounted filesystem layout.
+# This supports Btrfs, encryption and separate mounts without guessing devices,
+# and finishes before archinstall offers to reboot.
+custom_command=$(cat <<'MINUX_POST_INSTALL'
+set -Eeuo pipefail
+exec > >(tee -a /var/log/minux-install.log) 2>&1
+rm -f /var/lib/minux/install-complete
+pacman -Syu --needed --noconfirm git
+scripts_dir=$(mktemp -d /root/minux-install.XXXXXX)
+trap 'rm -rf "$scripts_dir"' EXIT
+git -C "$scripts_dir" init -q
+git -C "$scripts_dir" fetch --depth 1 https://github.com/kuper0201/minux_ml_scripts a7ef2a967c9449258e4427e515e03a8818f8ef31
+git -C "$scripts_dir" checkout -q --detach FETCH_HEAD
+"$scripts_dir/setup.sh"
+install -d /var/lib/minux
+printf '%s\n' 'a7ef2a967c9449258e4427e515e03a8818f8ef31' > /var/lib/minux/install-complete
+MINUX_POST_INSTALL
+)
+# arch-chroot bind-mounts the live resolver; give it uplink DNS, not a
+# loopback stub which may be unavailable in its systemd execution context.
+if [[ -s /run/systemd/resolve/resolv.conf ]]; then
+    ln -sfn /run/systemd/resolve/resolv.conf /etc/resolv.conf
+fi
+config=$(mktemp /tmp/minux-config.XXXXXX.json)
+trap 'rm -f "$config"' EXIT
+jq --arg command "$custom_command" '.custom_commands = ((.custom_commands // []) + [$command])' "$config_path" > "$config"
+archinstall --config "$config" "${archinstall_args[@]}"

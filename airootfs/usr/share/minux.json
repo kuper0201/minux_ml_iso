@@ -16,25 +16,17 @@
         "sys_lang": "en_US"
     },
     "mirror_config": {
-        "custom_mirrors": [],
-        "mirror_regions": {
-            "South Korea": [
-                "http://ftp.kaist.ac.kr/ArchLinux/$repo/os/$arch",
-                "http://kr.mirrors.cicku.me/archlinux/$repo/os/$arch",
-                "https://kr.mirrors.cicku.me/archlinux/$repo/os/$arch",
-                "http://ftp.lanet.kr/pub/archlinux/$repo/os/$arch",
-                "https://ftp.lanet.kr/pub/archlinux/$repo/os/$arch",
-                "http://mirror.siwoo.org/archlinux/$repo/os/$arch",
-                "https://mirror.siwoo.org/archlinux/$repo/os/$arch",
-                "http://mirror.funami.tech/arch/$repo/os/$arch",
-                "https://mirror.funami.tech/arch/$repo/os/$arch",
-                "http://mirror.yuki.net.uk/archlinux/$repo/os/$arch",
-                "https://mirror.yuki.net.uk/archlinux/$repo/os/$arch"
-            ]
-        }
+        "custom_servers": [
+            {
+                "url": "https://geo.mirror.pkgbuild.com/$repo/os/$arch"
+            }
+        ],
+        "mirror_regions": {},
+        "custom_repositories": [],
+        "optional_repositories": []
     },
     "network_config": {
-        "type": "iso"
+        "type": "nm"
     },
     "ntp": true,
     "packages": [],

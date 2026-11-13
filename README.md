@@ -16,6 +16,14 @@ To verify the downloaded ISO, place it beside `SHA256SUMS` and run:
 sha256sum -c SHA256SUMS
 ```
 
+# Installation
+
+Boot the ISO in UEFI mode, connect to the network (`nmtui` if needed), then run `setup-minux` as root. Select your target disk and user settings in Archinstall. MINUX customization runs inside Archinstall before its final reboot prompt; a failed customization stops the installation.
+
+The ISO pins the installation scripts and desktop configuration to tested commits. Installation needs access to the Arch mirrors, GitHub, and AUR. The customization log is saved to `/var/log/minux-install.log` on the installed system, and `/var/lib/minux/install-complete` records the scripts commit only after successful completion.
+
+For an existing Archinstall JSON configuration, use `setup-minux --config /path/to/config.json`; other Archinstall options are forwarded.
+
 # Packages
 ```text
 linux-lts
