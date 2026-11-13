@@ -34,11 +34,11 @@ pacman -Syu --needed --noconfirm git
 scripts_dir=$(mktemp -d /root/minux-install.XXXXXX)
 trap 'rm -rf "$scripts_dir"' EXIT
 git -C "$scripts_dir" init -q
-git -C "$scripts_dir" fetch --depth 1 https://github.com/kuper0201/minux_ml_scripts be0e8b3afc8eaa6e51d7c03f6f44dc1e779be0df
+git -C "$scripts_dir" fetch --depth 1 https://github.com/kuper0201/minux_ml_scripts 5d6a34cf762bea0b7358beca3a28479affda485a
 git -C "$scripts_dir" checkout -q --detach FETCH_HEAD
 "$scripts_dir/setup.sh"
 install -d /var/lib/minux
-printf '%s\n' 'be0e8b3afc8eaa6e51d7c03f6f44dc1e779be0df' > /var/lib/minux/install-complete
+printf '%s\n' '5d6a34cf762bea0b7358beca3a28479affda485a' > /var/lib/minux/install-complete
 MINUX_POST_INSTALL
 )
 # arch-chroot bind-mounts the live resolver; give it uplink DNS, not a
