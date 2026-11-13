@@ -34,3 +34,5 @@ lightdm
 micrimamba
 docker
 ```
+
+RealVNC is installed but starts only after licensing is configured. Then run `sudo systemctl enable --now vncserver-x11-serviced` to enable remote access. This prevents the unlicensed status window from covering the login screen.
